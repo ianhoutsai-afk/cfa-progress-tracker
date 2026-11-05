@@ -19,7 +19,7 @@ export class CloudStore{
  restoreRecovery(key){const item=this.listRecoveries().find(v=>v.key===key);if(!item)throw Error('這份備份已更新，請重新載入設定頁面');this.update(s=>{for(const k of Object.keys(s))delete s[k];Object.assign(s,structuredClone(item.state));});this.adopted.set(key,item.raw);if(!this.pending){this.clearAdopted();this.notify();}}
  async load({discardPending=false}={}){
   if(this.saving)throw Error('正在保存，請稍候');clearTimeout(this.timer);const generation=this.generation;
-  const r=await this.fetcher('/api/state');if(!r.ok)throw Error(r.status===401?'請先登入再重新載入':'無法載入雲端，請檢查網路後重試');
+  const r=await this.fetcher('/api/state');if(!r.ok){const error=Error(r.status===401?'尚未登入雲端帳戶':'無法載入雲端，請檢查網路後重試');error.status=r.status;throw error;}
   const data=await r.json();if(validateState(data.state)||typeof data.owner!=='string'||!data.owner||!Number.isSafeInteger(data.revision)||data.revision<0)throw Error('雲端回應格式不正確');
   if(this.generation!==generation)throw Error('載入期間已有新修改，已保留；請等保存完成後再試');
   this.owner=data.owner;this.key='cfa-progress-v1:'+this.owner;this.pendingKey=this.key+':pending:'+this.clientId;this.mode=data.mode||'cloud';let cached=null;

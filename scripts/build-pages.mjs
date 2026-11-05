@@ -1,0 +1,11 @@
+import {readFile,writeFile,mkdir,cp,rm} from 'node:fs/promises';
+import {resolve} from 'node:path';
+const root=resolve(import.meta.dirname,'..'),out=resolve(root,'site-pages');
+await rm(out,{recursive:true,force:true});await mkdir(out,{recursive:true});
+await cp(resolve(root,'public'),resolve(out,'public'),{recursive:true});
+await cp(resolve(root,'lib'),resolve(out,'lib'),{recursive:true});
+await rm(resolve(out,'public/index.html'));
+let html=await readFile(resolve(root,'public/index.html'),'utf8');
+html=html.replace('content="auto"','content="browser-local"').replace('href="./favicon.svg"','href="./public/favicon.svg"').replace('href="./styles.css"','href="./public/styles.css"').replace('src="./app.mjs"','src="./public/app.mjs"');
+await writeFile(resolve(out,'index.html'),html);await writeFile(resolve(out,'.nojekyll'),'');
+console.log('Built GitHub Pages app in site-pages/ (browser-local storage).');
